@@ -23,6 +23,7 @@ impl FileExists {
     }
 }
 
+// I don't know rust im stupid
 impl Check for FileExists {
     fn run_check(&mut self) {
         self.completed = Path::new(self.file_path.as_str()).exists();
@@ -30,5 +31,25 @@ impl Check for FileExists {
 
     fn kind(&self) -> CheckKind {
         CheckKind::FileExists
+    }
+
+    fn is_completed(&self) -> bool {
+        self.completed
+    }
+
+    fn set_is_completed(&mut self, is_completed: bool) {
+        self.completed = is_completed;
+    }
+
+    fn score(&self) -> i32 {
+        self.points
+    }
+
+    fn message(&self) -> String {
+        self.message.clone()
+    }
+
+    fn penalty_message(&self) -> String {
+        self.penalty_message.clone()
     }
 }

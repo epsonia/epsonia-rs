@@ -8,3 +8,4 @@ repository = "https://github.com/maytees/epsonia-rs"
 license = "Apache-2.0 license"
 
 [dependencies]
+epsonia-checks = { version = "0.1.0", path = "../epsonia-checks"}

@@ -3,5 +3,12 @@
 version = 3
 
 [[package]]
+name = "epsonia-checks"
+version = "0.1.0"
+
+[[package]]
 name = "epsonia-core"
 version = "0.1.0"
+dependencies = [
+ "epsonia-checks",
+]
