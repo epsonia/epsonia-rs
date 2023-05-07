@@ -1,0 +1,10 @@
+[package]
+name = "epsonia-core"
+version = "0.1.0"
+authors = ["Matees <matees.net>"]
+edition = "2021"
+homepage = "https://epsonia.matees.net"
+repository = "https://github.com/maytees/epsonia-rs"
+license = "Apache-2.0 license"
+
+[dependencies]
