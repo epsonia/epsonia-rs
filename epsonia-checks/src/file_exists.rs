@@ -5,11 +5,11 @@ use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FileExists {
-    file_path: String,
-    points: i32,
-    message: String,
-    penalty_message: String,
-    completed: bool,
+    pub file_path: String,
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub completed: bool,
 }
 
 impl FileExists {
@@ -28,38 +28,6 @@ impl FileExists {
 
 impl CheckData for FileExists {
     fn run_check(&mut self) {
-        self.set_is_completed(Path::new(&self.file_path).exists());
-    }
-
-    fn is_completed(&self) -> &bool {
-        &self.completed
-    }
-
-    fn set_is_completed(&mut self, is_completed: bool) {
-        self.completed = is_completed;
-    }
-
-    fn points(&self) -> &i32 {
-        &self.points
-    }
-
-    fn set_points(&mut self, points: i32) {
-        self.points = points;
-    }
-
-    fn message(&self) -> &String {
-        &self.message
-    }
-
-    fn set_message(&mut self, message: String) {
-        self.message = message;
-    }
-
-    fn penalty_message(&self) -> &String {
-        &self.penalty_message
-    }
-
-    fn set_penalty_message(&mut self, penalty_message: String) {
-        self.penalty_message = penalty_message;
+        self.completed = Path::new(&self.file_path).exists();
     }
 }

@@ -38,18 +38,22 @@ impl Engine {
         let mut penalty_str = String::from("");
 
         self.completed_checks.iter().for_each(|check| {
+            let check = match check {
+                Checks::FileExists(check) => check,
+            };
             completed_str.push_str(&format!(
                 "<li>{} - {} points</li>",
-                check.message(),
-                check.points()
+                check.message, check.points
             ));
         });
 
         self.penalties.iter().for_each(|check| {
+            let check = match check {
+                Checks::FileExists(check) => check,
+            };
             penalty_str.push_str(&format!(
                 "<li>{} - {} points</li>",
-                check.penalty_message(),
-                check.points()
+                check.penalty_message, check.points
             ));
         });
 
@@ -69,56 +73,62 @@ impl Engine {
         println!("Running Checks");
 
         // Run check, if completed, add remove it from the
-        for check in &mut self.checks {
-            check.run_check();
+        for check_o in &mut self.checks {
+            let check = match check_o {
+                Checks::FileExists(check) => check,
+            };
 
-            if self.completed_checks.contains(&check) && !check.is_completed() {
+            check_o.run_check();
+
+            if self.completed_checks.contains(check_o) && !check.completed {
                 self.completed_checks.remove(
                     self.completed_checks
                         .iter()
-                        .position(|x| x == check)
+                        .position(|x| x == check_o)
                         .unwrap(),
                 );
-                self.penalties.push(check.clone());
-                self.score -= check.points();
+                self.penalties
+                    .push(epsonia_checks::check::Checks::FileExists(check.clone()));
+                self.score -= check.points;
 
                 // Penalty notification - Will later be sys notif
-                println!("Penalty: {}", check.message());
+                println!("Penalty: {}", check.message);
                 continue;
             }
 
-            if *check.is_completed() && !self.completed_checks.contains(check)
-                || *check.is_completed() && self.penalties.contains(check)
+            if check.completed && !self.completed_checks.contains(check_o)
+                || check.completed && self.penalties.contains(check_o)
             {
-                self.score += check.points();
-                self.completed_checks.push(check.clone());
+                self.score += check.points;
+                self.completed_checks.push(check_o.clone());
 
-                if self.penalties.contains(&check) {
+                if self.penalties.contains(&check_o) {
                     self.penalties
-                        .remove(self.penalties.iter().position(|x| x == check).unwrap());
+                        .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
                 }
 
                 // Completion notification - Will later be sys notif
-                println!("Completed: {}", check.message());
+                println!("Completed: {}", check.message);
             }
         }
 
         self.set_scoring_report();
 
         self.completed_checks.iter().for_each(|check| {
+            let check = match check {
+                Checks::FileExists(check) => check,
+            };
             println!(
                 "Fixed vulnerability - {} - ({}) points",
-                check.message(),
-                check.points()
+                check.message, check.points
             );
         });
 
         self.penalties.iter().for_each(|p| {
-            println!(
-                "Penalty - {} - ({}) points",
-                p.penalty_message(),
-                p.points()
-            );
+            let p = match p {
+                Checks::FileExists(p) => p,
+            };
+            println!("Penalty - {} - ({}) points", p.penalty_message, p.points);
         });
     }
 }
