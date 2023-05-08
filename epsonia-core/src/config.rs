@@ -1,16 +1,20 @@
+use std::{fs::File, io::Read};
+
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    name: String,
-    image_url: String,
-    auto_export_path: String,
-    auto_export: bool,
-    config_folder: String,
-    export_folder: String,
-    engine_interval: u32,
-    auto_refresh: u32,
-    notif_icon: String,
-    competition_mode: String,
-    competition_mode: bool,
+    pub name: String,
+    pub image_url: String,
+    pub auto_export_path: String,
+    pub auto_export: bool,
+    pub config_folder: String,
+    pub export_folder: String,
+    pub engine_interval: u32,
+    pub auto_refresh: u32,
+    pub notif_icon: String,
+    pub competition_string: String,
+    pub competition_mode: bool,
 }
 
 impl Config {

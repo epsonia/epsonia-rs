@@ -1,4 +1,4 @@
-use epsonia_checks::checks::check::{CheckData, Checks};
+use epsonia_checks::check::{CheckData, Checks};
 
 pub struct Engine {
     image_name: String,

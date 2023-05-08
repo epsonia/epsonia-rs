@@ -1,7 +1,9 @@
+use serde::{Deserialize, Serialize};
+
 use super::check::CheckData;
 use std::path::Path;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct FileExists {
     file_path: String,
     points: i32,
