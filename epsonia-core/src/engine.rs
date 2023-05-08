@@ -1,12 +1,4 @@
-use std::{cell::RefCell, ops::Deref, rc::Rc};
-
-use epsonia_checks::checks::{check::CheckData, *};
-
-// Check trait needed? idk
-use check::{CheckKind, Checks};
-
-// Check imports
-use file_exists::FileExists;
+use epsonia_checks::checks::check::{CheckData, Checks};
 
 pub struct Engine {
     image_name: String,
