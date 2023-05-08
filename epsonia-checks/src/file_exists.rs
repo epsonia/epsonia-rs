@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use super::check::CheckData;
 use std::path::Path;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -24,10 +23,8 @@ impl FileExists {
             completed: false,
         }
     }
-}
 
-impl CheckData for FileExists {
-    fn run_check(&mut self) {
+    pub fn run_check(&mut self) {
         self.completed = Path::new(&self.file_path).exists();
     }
 }

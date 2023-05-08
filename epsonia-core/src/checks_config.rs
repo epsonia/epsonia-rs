@@ -1,4 +1,4 @@
-use epsonia_checks::check::{CheckData, Checks};
+use epsonia_checks::check::Checks;
 
 use epsonia_checks::file_exists::FileExists;
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,10 @@ pub fn get_max_points(checks: &Vec<Checks>) -> i32 {
     let mut max_points = 0;
 
     for check in checks {
-        max_points += check.points();
+        let check = match check {
+            Checks::FileExists(check) => check,
+        };
+        max_points += check.points;
     }
 
     max_points

@@ -1,4 +1,4 @@
-use epsonia_checks::check::{CheckData, Checks};
+use epsonia_checks::check::Checks;
 
 pub struct Engine {
     image_name: String,
@@ -74,11 +74,11 @@ impl Engine {
 
         // Run check, if completed, add remove it from the
         for check_o in &mut self.checks {
-            let check = match check_o {
+            let check = match &check_o {
                 Checks::FileExists(check) => check,
             };
 
-            check_o.run_check();
+            check.clone().run_check();
 
             if self.completed_checks.contains(check_o) && !check.completed {
                 self.completed_checks.remove(
