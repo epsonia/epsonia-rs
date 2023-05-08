@@ -1,21 +1,20 @@
-use epsonia_checks::check::Checks;
-
+use epsonia_checks::check::Check;
 pub struct Engine {
     image_name: String,
     score: i32,
     max_score: i32,
     // Don't worry about this mess.
-    checks: Vec<Checks>,
-    all_checks: Vec<Checks>,
-    completed_checks: Vec<Checks>,
-    penalties: Vec<Checks>,
-    hidden_penalites: Vec<Checks>,
-    hidden_completions: Vec<Checks>,
+    checks: Vec<Check>,
+    all_checks: Vec<Check>,
+    completed_checks: Vec<Check>,
+    penalties: Vec<Check>,
+    hidden_penalites: Vec<Check>,
+    hidden_completions: Vec<Check>,
     checks_len: i32,
 }
 
 impl Engine {
-    pub fn new(checks: Vec<Checks>, max_score: i32) -> Self {
+    pub fn new(checks: Vec<Check>, max_score: i32) -> Self {
         let check_amount = checks.len() as i32;
 
         Engine {
@@ -38,9 +37,6 @@ impl Engine {
         let mut penalty_str = String::from("");
 
         self.completed_checks.iter().for_each(|check| {
-            let check = match check {
-                Checks::FileExists(check) => check,
-            };
             completed_str.push_str(&format!(
                 "<li>{} - {} points</li>",
                 check.message, check.points
@@ -48,9 +44,6 @@ impl Engine {
         });
 
         self.penalties.iter().for_each(|check| {
-            let check = match check {
-                Checks::FileExists(check) => check,
-            };
             penalty_str.push_str(&format!(
                 "<li>{} - {} points</li>",
                 check.penalty_message, check.points
@@ -74,11 +67,7 @@ impl Engine {
 
         // Run check, if completed, add remove it from the
         for check_o in &mut self.checks {
-            let check = match &check_o {
-                Checks::FileExists(check) => check,
-            };
-
-            check.clone().run_check();
+            let check = check_o.clone().run_check();
 
             if self.completed_checks.contains(check_o) && !check.completed {
                 self.completed_checks.remove(
@@ -87,8 +76,7 @@ impl Engine {
                         .position(|x| x == check_o)
                         .unwrap(),
                 );
-                self.penalties
-                    .push(epsonia_checks::check::Checks::FileExists(check.clone()));
+                self.penalties.push(check.clone());
                 self.score -= check.points;
 
                 // Penalty notification - Will later be sys notif
@@ -115,9 +103,6 @@ impl Engine {
         self.set_scoring_report();
 
         self.completed_checks.iter().for_each(|check| {
-            let check = match check {
-                Checks::FileExists(check) => check,
-            };
             println!(
                 "Fixed vulnerability - {} - ({}) points",
                 check.message, check.points
@@ -125,9 +110,6 @@ impl Engine {
         });
 
         self.penalties.iter().for_each(|p| {
-            let p = match p {
-                Checks::FileExists(p) => p,
-            };
             println!("Penalty - {} - ({}) points", p.penalty_message, p.points);
         });
     }

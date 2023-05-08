@@ -1,11 +1,12 @@
 mod checks_config;
 mod config;
 mod engine;
+mod models;
 
 use clap::{Parser, Subcommand};
 use engine::Engine;
 
-use epsonia_checks::check::Checks;
+use epsonia_checks::check::Check;
 
 #[derive(Parser)]
 #[command(
@@ -56,7 +57,7 @@ async fn run(export: &Option<String>, config: &Option<String>) {
     let config_path: String = config.clone().unwrap_or(String::from("./config"));
 
     let checks_config: checks_config::ChecksConfig = checks_config::parse_checks_config();
-    let checks: &Vec<Checks> = &checks_config::get_checks();
+    let checks: &Vec<Check> = &checks_config::get_checks();
     let config: config::Config = config::Config::get(config_path);
 
     let mut engine: Engine = Engine::new(checks.to_vec(), checks_config::get_max_points(&checks));

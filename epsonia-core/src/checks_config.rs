@@ -1,7 +1,7 @@
-use epsonia_checks::check::Checks;
-
-use epsonia_checks::file_exists::FileExists;
+use epsonia_checks::check::{Check, CheckKind};
 use serde::{Deserialize, Serialize};
+
+use crate::models::FileExists;
 
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,26 +15,31 @@ pub fn parse_checks_config() -> ChecksConfig {
 }
 
 // Run before engine
-pub fn get_max_points(checks: &Vec<Checks>) -> i32 {
+pub fn get_max_points(checks: &Vec<Check>) -> i32 {
     let mut max_points = 0;
 
     for check in checks {
-        let check = match check {
-            Checks::FileExists(check) => check,
-        };
         max_points += check.points;
     }
 
     max_points
 }
 
-pub fn get_checks() -> Vec<Checks> {
+pub fn get_checks() -> Vec<Check> {
     let checks_config = parse_checks_config();
 
-    let mut checks: Vec<Checks> = Vec::new();
+    let mut checks: Vec<Check> = Vec::new();
 
     for check in checks_config.file_exists_check {
-        checks.push(Checks::FileExists(check));
+        checks.push(Check::new(
+            check.points,
+            check.message,
+            check.penalty_message,
+            false,
+            CheckKind::FileExists {
+                file_path: check.file_path,
+            },
+        ));
     }
 
     checks
