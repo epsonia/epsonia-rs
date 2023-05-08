@@ -1,9 +1,9 @@
 use std::{cell::RefCell, ops::Deref, rc::Rc};
 
-use epsonia_checks::checks::*;
+use epsonia_checks::checks::{check::CheckData, *};
 
 // Check trait needed? idk
-use check::{Check, CheckKind};
+use check::{CheckKind, Checks};
 
 // Check imports
 use file_exists::FileExists;
@@ -12,25 +12,19 @@ pub struct Engine {
     image_name: String,
     score: i32,
     max_score: i32,
-    checks: Vec<Rc<RefCell<dyn Check>>>,
-    // Don't worry about this mess
-    all_checks: Vec<Rc<RefCell<dyn Check>>>,
-    completed_checks: Vec<Rc<RefCell<dyn Check>>>,
-    hidden_completions: Vec<Rc<RefCell<dyn Check>>>,
-    penalties: Vec<Rc<RefCell<dyn Check>>>,
-    hidden_penalties: Vec<Rc<RefCell<dyn Check>>>,
+    // Don't worry about this mess.
+    checks: Vec<Checks>,
+    all_checks: Vec<Checks>,
+    completed_checks: Vec<Checks>,
+    penalties: Vec<Checks>,
+    hidden_penalites: Vec<Checks>,
+    hidden_completions: Vec<Checks>,
     checks_len: i32,
 }
 
 impl Engine {
-    pub fn new(checks: Vec<Rc<RefCell<dyn Check>>>, max_score: i32) -> Self {
-        let check_amount = checks
-            .iter()
-            .filter(|c| match c.borrow().kind() {
-                CheckKind::UserHasToExist => false,
-                _ => true,
-            })
-            .count() as i32;
+    pub fn new(checks: Vec<Checks>, max_score: i32) -> Self {
+        let check_amount = checks.len() as i32;
 
         Engine {
             image_name: String::from(""),
@@ -38,57 +32,101 @@ impl Engine {
             max_score,
             checks: checks.clone(),
             all_checks: checks.clone(),
-            completed_checks: vec![],
-            hidden_completions: vec![],
-            penalties: vec![],
-            hidden_penalties: vec![],
+            penalties: Vec::new(),
+            completed_checks: Vec::new(),
+            hidden_completions: Vec::new(),
+            hidden_penalites: Vec::new(),
             checks_len: check_amount,
         }
+    }
+
+    pub fn set_scoring_report(&self) {
+        // Reference: println!("{}", markdown::to_html("# Hello World"));
+        let mut completed_str = String::from("");
+        let mut penalty_str = String::from("");
+
+        self.completed_checks.iter().for_each(|check| {
+            completed_str.push_str(&format!(
+                "<li>{} - {} points</li>",
+                check.message(),
+                check.points()
+            ));
+        });
+
+        self.penalties.iter().for_each(|check| {
+            penalty_str.push_str(&format!(
+                "<li>{} - {} points</li>",
+                check.penalty_message(),
+                check.points()
+            ));
+        });
+
+        let report = format!(
+            "#{}\n\n<h1>Scoring Report</h1><h2>Score: {}/{} points</h2><h2>Completed Checks</h2><ul>{}</ul><h2>Penalties</h2><ul>{}</ul>",
+            self.image_name,
+            self.score,
+            self.max_score,
+            completed_str,
+            penalty_str
+        );
+
+        std::fs::write("./report.html", report).unwrap();
     }
 
     pub fn run_engine(&mut self) {
         println!("Running Checks");
 
-        for check_i in self.all_checks.iter() {
-            let mut check = check_i.borrow_mut();
+        // Run check, if completed, add remove it from the
+        for check in &mut self.checks {
             check.run_check();
 
-            if check.kind().eq(&CheckKind::UserHasToExist) {
-                if self.hidden_completions.contains(check_i) && !check.is_completed() {
-                    self.hidden_completions.remove(
-                        self.hidden_completions
-                            .iter()
-                            .position(|x| x == check_i)
-                            .unwrap(),
-                    );
-                    self.hidden_penalties.push(check_i.clone());
-                    self.score -= check.score();
+            if self.completed_checks.contains(&check) && !check.is_completed() {
+                self.completed_checks.remove(
+                    self.completed_checks
+                        .iter()
+                        .position(|x| x == check)
+                        .unwrap(),
+                );
+                self.penalties.push(check.clone());
+                self.score -= check.points();
 
-                    // Will be system notification later, using some lib
-                    println!("Removed vuln - {}: {}", check.message(), check.score());
-                }
-
-                if (check.is_completed() && !self.hidden_completions.contains(check_i))
-                    || (check.is_completed() && self.hidden_penalties.contains(check_i))
-                {
-                    self.score = check.score();
-                    self.hidden_completions.push(check_i.clone());
-
-                    if self.hidden_penalties.contains(check_i) {
-                        self.hidden_penalties.remove(
-                            self.hidden_penalties
-                                .iter()
-                                .position(|x| x == check_i)
-                                .unwrap(),
-                        );
-                    }
-
-                    // Will be system notification later, using some lib
-                    println!("Fixed vuln - {}: {}", check.message(), check.score());
-                }
-
+                // Penalty notification - Will later be sys notif
+                println!("Penalty: {}", check.message());
                 continue;
             }
+
+            if *check.is_completed() && !self.completed_checks.contains(check)
+                || *check.is_completed() && self.penalties.contains(check)
+            {
+                self.score += check.points();
+                self.completed_checks.push(check.clone());
+
+                if self.penalties.contains(&check) {
+                    self.penalties
+                        .remove(self.penalties.iter().position(|x| x == check).unwrap());
+                }
+
+                // Completion notification - Will later be sys notif
+                println!("Completed: {}", check.message());
+            }
         }
+
+        self.set_scoring_report();
+
+        self.completed_checks.iter().for_each(|check| {
+            println!(
+                "Fixed vulnerability - {} - ({}) points",
+                check.message(),
+                check.points()
+            );
+        });
+
+        self.penalties.iter().for_each(|p| {
+            println!(
+                "Penalty - {} - ({}) points",
+                p.penalty_message(),
+                p.points()
+            );
+        });
     }
 }

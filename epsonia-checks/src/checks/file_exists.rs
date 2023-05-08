@@ -1,6 +1,7 @@
-use super::check::{Check, CheckKind};
+use super::check::CheckData;
 use std::path::Path;
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct FileExists {
     file_path: String,
     points: i32,
@@ -23,33 +24,40 @@ impl FileExists {
     }
 }
 
-// I don't know rust im stupid
-impl Check for FileExists {
+impl CheckData for FileExists {
     fn run_check(&mut self) {
-        self.completed = Path::new(self.file_path.as_str()).exists();
+        self.set_is_completed(Path::new(&self.file_path).exists());
     }
 
-    fn kind(&self) -> CheckKind {
-        CheckKind::FileExists
-    }
-
-    fn is_completed(&self) -> bool {
-        self.completed
+    fn is_completed(&self) -> &bool {
+        &self.completed
     }
 
     fn set_is_completed(&mut self, is_completed: bool) {
         self.completed = is_completed;
     }
 
-    fn score(&self) -> i32 {
-        self.points
+    fn points(&self) -> &i32 {
+        &self.points
     }
 
-    fn message(&self) -> String {
-        self.message.clone()
+    fn set_points(&mut self, points: i32) {
+        self.points = points;
     }
 
-    fn penalty_message(&self) -> String {
-        self.penalty_message.clone()
+    fn message(&self) -> &String {
+        &self.message
+    }
+
+    fn set_message(&mut self, message: String) {
+        self.message = message;
+    }
+
+    fn penalty_message(&self) -> &String {
+        &self.penalty_message
+    }
+
+    fn set_penalty_message(&mut self, penalty_message: String) {
+        self.penalty_message = penalty_message;
     }
 }
