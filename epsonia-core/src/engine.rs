@@ -1,4 +1,5 @@
-use epsonia_checks::check::Check;
+use epsonia_checks::check::{Check, CheckKind};
+use notify_rust::Notification;
 pub struct Engine {
     image_name: String,
     score: i32,
@@ -69,6 +70,7 @@ impl Engine {
         for check_o in &mut self.checks {
             let check = check_o.clone().run_check();
 
+            // Penalty
             if self.completed_checks.contains(check_o) && !check.completed {
                 self.completed_checks.remove(
                     self.completed_checks
@@ -79,11 +81,21 @@ impl Engine {
                 self.penalties.push(check.clone());
                 self.score -= check.points;
 
-                // Penalty notification - Will later be sys notif
-                println!("Penalty: {}", check.message);
+                Notification::new()
+                    .summary("Penalty!")
+                    .body(&format!("You lost {} points!", check.points))
+                    .icon("dialog-warning")
+                    .show()
+                    .unwrap();
+
+                println!(
+                    "Penalty: {} points, message: {}",
+                    check.points, check.message
+                );
                 continue;
             }
 
+            // Completion
             if check.completed && !self.completed_checks.contains(check_o)
                 || check.completed && self.penalties.contains(check_o)
             {
@@ -95,8 +107,17 @@ impl Engine {
                         .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
                 }
 
-                // Completion notification - Will later be sys notif
-                println!("Completed: {}", check.message);
+                Notification::new()
+                    .summary("Good Job!")
+                    .body(&format!("You gained {} points!", check.points))
+                    .icon("info")
+                    .show()
+                    .unwrap();
+
+                println!(
+                    "Completion: {} points, message: {}",
+                    check.points, check.message
+                );
             }
         }
 
