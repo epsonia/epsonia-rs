@@ -1,11 +1,5 @@
 use super::file_exists::FileExists;
 
-#[derive(PartialEq)]
-pub enum CheckKind {
-    FileExists,
-    UserHasToExist,
-}
-
 #[derive(PartialEq, Clone)]
 pub enum Checks {
     FileExists(FileExists),
