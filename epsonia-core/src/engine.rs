@@ -1,4 +1,4 @@
-use epsonia_checks::check::{Check, CheckKind};
+use epsonia_checks::check::Check;
 use notify_rust::Notification;
 
 use crate::config::Config;
@@ -8,30 +8,20 @@ pub struct Engine {
     max_score: i32,
     // Don't worry about this mess.
     checks: Vec<Check>,
-    all_checks: Vec<Check>,
     completed_checks: Vec<Check>,
     penalties: Vec<Check>,
-    hidden_penalites: Vec<Check>,
-    hidden_completions: Vec<Check>,
-    checks_len: i32,
     config: Config,
 }
 
 impl Engine {
     pub fn new(checks: Vec<Check>, max_score: i32, config: Config) -> Self {
-        let check_amount = checks.len() as i32;
-
         Engine {
             image_name: String::from(""),
             score: 0,
             max_score,
-            checks: checks.clone(),
-            all_checks: checks.clone(),
+            checks,
             penalties: Vec::new(),
             completed_checks: Vec::new(),
-            hidden_completions: Vec::new(),
-            hidden_penalites: Vec::new(),
-            checks_len: check_amount,
             config,
         }
     }
@@ -97,15 +87,13 @@ impl Engine {
 
                 continue;
             }
-
-            // Completion
-            if check.completed && !self.completed_checks.contains(check_o)
-                || check.completed && self.penalties.contains(check_o)
+            if (self.penalties.contains(check_o) || !self.completed_checks.contains(check_o))
+                && check.completed
             {
                 self.score += check.points;
                 self.completed_checks.push(check_o.clone());
 
-                if self.penalties.contains(&check_o) {
+                if self.penalties.contains(check_o) {
                     self.penalties
                         .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
                 }
@@ -117,6 +105,26 @@ impl Engine {
                     .show()
                     .unwrap();
             }
+
+            // // Completion
+            // if check.completed && !self.completed_checks.contains(check_o)
+            //     || check.completed && self.penalties.contains(check_o)
+            // {
+            //     self.score += check.points;
+            //     self.completed_checks.push(check_o.clone());
+
+            //     if self.penalties.contains(check_o) {
+            //         self.penalties
+            //             .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
+            //     }
+
+            //     Notification::new()
+            //         .summary("Good Job!")
+            //         .body(&format!("You gained {} points!", check.points))
+            //         .icon("info")
+            //         .show()
+            //         .unwrap();
+            // }
         }
 
         self.set_scoring_report();
