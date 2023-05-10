@@ -53,14 +53,23 @@ async fn main() {
 }
 
 async fn run(export: &Option<String>, config: &Option<String>) {
-    let export_path: String = export.clone().unwrap_or(String::from("./export"));
     let config_path: String = config.clone().unwrap_or(String::from("./config"));
 
-    let checks_config: checks_config::ChecksConfig = checks_config::parse_checks_config();
     let checks: &Vec<Check> = &checks_config::get_checks();
     let config: config::Config = config::Config::get(config_path);
 
-    let mut engine: Engine = Engine::new(checks.to_vec(), checks_config::get_max_points(&checks));
+    let mut engine: Engine = Engine::new(
+        checks.to_vec(),
+        checks_config::get_max_points(&checks),
+        if let Some(export) = export {
+            config::Config {
+                auto_export_path: export.clone(),
+                ..config
+            }
+        } else {
+            config.clone()
+        },
+    );
     let mut interval: tokio::time::Interval = tokio::time::interval(
         tokio::time::Duration::from_secs(config.engine_interval as u64),
     );

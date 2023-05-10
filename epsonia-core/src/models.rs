@@ -6,4 +6,5 @@ pub struct FileExists {
     pub points: i32,
     pub message: String,
     pub penalty_message: String,
+    pub should_exist: bool,
 }

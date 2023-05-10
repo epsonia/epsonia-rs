@@ -1,0 +1,168 @@
+{
+  "userInGroup": [
+    {
+      "name": "matees",
+      "group": "wonkydonkers",
+      "shouldbe": true,
+      "points": 2,
+      "message": "User matees in correct group",
+      "penaltyMessage": "User matees is not in the correct group"
+    },
+    {
+      "name": "bilbo",
+      "group": "wonkydonkers",
+      "shouldbe": false,
+      "points": 2,
+      "message": "User bilbo not in group",
+      "penaltyMessage": "User bilbo is in the wrong group"
+    }
+  ],
+  "firewallConfig": {
+    "firewallStatus": {
+      "shouldbeUp": true,
+      "points": 5,
+      "message": "Firewall is up",
+      "penaltyMessage": "Firewall is down"
+    },
+    "firewallLogging": {
+      "level": "full",
+      "points": 2,
+      "message": "Firewall logging set to full",
+      "penaltyMessage": "Firewall logging is not right"
+    },
+    "ports": {
+      "openPorts": [
+        80,
+        443
+      ],
+      "points": 2,
+      "message": "Port is open",
+      "penaltyMessage": "Port is closed"
+    }
+  },
+  "users": [
+    {
+      "name": "albert",
+      "shouldExist": false,
+      "initialExist": true,
+      "administrator": false,
+      "points": 6,
+      "adminPoints": 2,
+      "message": "Malicous user Albert removed",
+      "penaltyMessage": "Malicous user Albert has returned"
+    },
+    {
+      "name": "frodo",
+      "shouldExist": false,
+      "initialExist": true,
+      "administrator": false,
+      "points": 6,
+      "adminPoints": 2,
+      "message": "Malicous user Frodo removed",
+      "penaltyMessage": "Malicous user Frodo has returned"
+    },
+    {
+      "name": "gandalf",
+      "shouldExist": true,
+      "initialExist": true,
+      "administrator": true,
+      "points": 8,
+      "adminPoints": 2,
+      "penaltyMessage": "User Gandalf removed"
+    },
+    {
+      "name": "bilbo",
+      "shouldExist": true,
+      "initialExist": false,
+      "administrator": true,
+      "points": 8,
+      "adminPoints": 2,
+      "message": "User Bilbo created",
+      "penaltyMessage": "User `Bilbo` was taken back to the grave"
+    }
+  ],
+  "binaryExists": [
+    {
+      "name": "firefox",
+      "points": 4,
+      "message": "Firefox is installed",
+      "penaltyMessage": "Firefox does not exist"
+    },
+    {
+      "name": "sl",
+      "points": 6,
+      "message": "Train sl is installed",
+      "penaltyMessage": "Train has left the village!"
+    }
+  ],
+  "onlineServices": [
+    {
+      "serviceName": "ufw",
+      "points": 3,
+      "message": "The wall of mordor is enabled (UFW)",
+      "penaltyMessage": "The wall of mordor is disabled! (UFW)"
+    }
+  ],
+  "forensics": [
+    {
+      "path": "/home/matees/Desktop/ForensicQuestion1.txt",
+      "answers": [
+        "Frodo"
+      ],
+      "caseSensative": true,
+      "points": 10,
+      "message": "Forensic question 1 solved (lord of the rings)",
+      "penaltyMessage": "The ring bearer is gone! (Forensic question 1 unsolved)"
+    },
+    {
+      "path": "/home/matees/Desktop/ForensicQuestion2.txt",
+      "answers": [
+        "Wushi Finger",
+        "Skidush"
+      ],
+      "caseSensative": false,
+      "points": 8,
+      "message": "Forensic question 2 solved (panda)",
+      "penaltyMessage": "Po can't move it move it. (Forensic 2)"
+    }
+  ],
+  "fileExistsChecks": [
+    {
+      "path": "/home/matees/Desktop/breakLinux.bat",
+      "points": 3,
+      "message": "Removed bad file",
+      "penaltyMessage": "Bad file is back!"
+    },
+    {
+      "path": "/home/matees/Desktop/rural.mp4",
+      "points": 1,
+      "message": "Removed rural.mp4 media file",
+      "penaltyMessage": "Media file is back rural.mp4 is back"
+    },
+    {
+      "path": "/home/matees/Desktop/hi.mp3",
+      "points": 1,
+      "message": "Removed hi.mp3 media file",
+      "penaltyMessage": "Media file hi.mp3 is back"
+    }
+  ],
+  "fileLineContains": [
+    {
+      "path": "/home/matees/Desktop/someConfig.conf",
+      "correctContent": "enableRoaming: true",
+      "line": "5",
+      "points": 4,
+      "message": "Enabled roaming",
+      "penaltyMessage": "Roaming is disabled!"
+    }
+  ],
+  "fileContainsContent": [
+    {
+      "path": "/home/matees/Desktop/secret.txt",
+      "containing": "Gondor",
+      "points": 5,
+      "message": "Song.txt contains \"Gondor\"",
+      "penaltyMessage": "Secret is unsolved"
+    }
+  ]
+}

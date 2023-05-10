@@ -1,0 +1,13 @@
+{
+  "name": "Ubuntu 20.04 image",
+  "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVMLDceOOHBchzDI3PvP1C5l-IzZlzun72TbKQ741IhafgQIgYxS6elm5krZeVHCikt1U&usqp=CAU",
+  "auto_export_path": "/home/matees/Desktop",
+  "auto_export": true,
+  "export_folder": "/home/matees/Desktop/epsonia/export",
+  "config_folder": "/home/matees/Desktop/epsonia/config",
+  "notif_icon_path": "file:///home/matees/Desktop/epsonia/config/notif_icon.png",
+  "engine_interval": 5000,
+  "auto_refresh": 2500,
+  "competition_mode": true,
+  "competition_url": "http://localhost:8773/competition/1"
+}

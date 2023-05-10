@@ -11,7 +11,10 @@ pub struct Check {
 
 #[derive(PartialEq, Clone)]
 pub enum CheckKind {
-    FileExists { file_path: String },
+    FileExists {
+        file_path: String,
+        should_exist: bool,
+    },
 }
 
 impl Check {
@@ -31,11 +34,13 @@ impl Check {
         }
     }
     pub fn run_check(&mut self) -> Self {
-        match &self.kind {
-            CheckKind::FileExists { file_path } => {
-                self.completed = Path::new(file_path).exists();
-                self.clone()
-            }
-        }
+        self.completed = match &self.kind {
+            CheckKind::FileExists {
+                file_path,
+                should_exist,
+            } => Path::new(file_path).exists() == *should_exist,
+        };
+
+        self.clone()
     }
 }
