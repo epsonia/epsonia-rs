@@ -60,7 +60,7 @@ async fn run(export: &Option<String>, config: &Option<String>) {
 
     let mut engine: Engine = Engine::new(
         checks.to_vec(),
-        checks_config::get_max_points(&checks),
+        checks_config::get_max_points(checks),
         if let Some(export) = export {
             config::Config {
                 auto_export_path: export.clone(),

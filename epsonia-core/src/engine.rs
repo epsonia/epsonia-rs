@@ -19,7 +19,7 @@ impl Engine {
             image_name: String::from(""),
             score: 0,
             max_score,
-            checks: checks.clone(),
+            checks,
             penalties: Vec::new(),
             completed_checks: Vec::new(),
             config,
@@ -87,15 +87,13 @@ impl Engine {
 
                 continue;
             }
-
-            // Completion
-            if check.completed && !self.completed_checks.contains(check_o)
-                || check.completed && self.penalties.contains(check_o)
+            if (self.penalties.contains(check_o) || !self.completed_checks.contains(check_o))
+                && check.completed
             {
                 self.score += check.points;
                 self.completed_checks.push(check_o.clone());
 
-                if self.penalties.contains(&check_o) {
+                if self.penalties.contains(check_o) {
                     self.penalties
                         .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
                 }
@@ -107,6 +105,26 @@ impl Engine {
                     .show()
                     .unwrap();
             }
+
+            // // Completion
+            // if check.completed && !self.completed_checks.contains(check_o)
+            //     || check.completed && self.penalties.contains(check_o)
+            // {
+            //     self.score += check.points;
+            //     self.completed_checks.push(check_o.clone());
+
+            //     if self.penalties.contains(check_o) {
+            //         self.penalties
+            //             .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
+            //     }
+
+            //     Notification::new()
+            //         .summary("Good Job!")
+            //         .body(&format!("You gained {} points!", check.points))
+            //         .icon("info")
+            //         .show()
+            //         .unwrap();
+            // }
         }
 
         self.set_scoring_report();
