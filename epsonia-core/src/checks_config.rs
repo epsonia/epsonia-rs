@@ -6,7 +6,7 @@ use crate::models::FileExists;
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChecksConfig {
-    pub file_exists_check: Vec<FileExists>,
+    pub file_exists: Vec<FileExists>,
 }
 
 pub fn parse_checks_config() -> ChecksConfig {
@@ -30,7 +30,7 @@ pub fn get_checks() -> Vec<Check> {
 
     let mut checks: Vec<Check> = Vec::new();
 
-    for check in checks_config.file_exists_check {
+    for check in checks_config.file_exists {
         checks.push(Check::new(
             check.points,
             check.message,
@@ -38,6 +38,7 @@ pub fn get_checks() -> Vec<Check> {
             false,
             CheckKind::FileExists {
                 file_path: check.file_path,
+                should_exist: check.should_exist,
             },
         ));
     }

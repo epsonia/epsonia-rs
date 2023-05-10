@@ -1,5 +1,7 @@
 use epsonia_checks::check::{Check, CheckKind};
 use notify_rust::Notification;
+
+use crate::config::Config;
 pub struct Engine {
     image_name: String,
     score: i32,
@@ -12,10 +14,11 @@ pub struct Engine {
     hidden_penalites: Vec<Check>,
     hidden_completions: Vec<Check>,
     checks_len: i32,
+    config: Config,
 }
 
 impl Engine {
-    pub fn new(checks: Vec<Check>, max_score: i32) -> Self {
+    pub fn new(checks: Vec<Check>, max_score: i32, config: Config) -> Self {
         let check_amount = checks.len() as i32;
 
         Engine {
@@ -29,30 +32,27 @@ impl Engine {
             hidden_completions: Vec::new(),
             hidden_penalites: Vec::new(),
             checks_len: check_amount,
+            config,
         }
     }
 
     pub fn set_scoring_report(&self) {
-        // Reference: println!("{}", markdown::to_html("# Hello World"));
         let mut completed_str = String::from("");
         let mut penalty_str = String::from("");
 
         self.completed_checks.iter().for_each(|check| {
-            completed_str.push_str(&format!(
-                "<li>{} - {} points</li>",
-                check.message, check.points
-            ));
+            completed_str.push_str(&format!("- {} - {} points\n", check.message, check.points));
         });
 
         self.penalties.iter().for_each(|check| {
             penalty_str.push_str(&format!(
-                "<li>{} - {} points</li>",
+                "- {} - {} points\n",
                 check.penalty_message, check.points
             ));
         });
 
         let report = format!(
-            "#{}\n\n<h1>Scoring Report</h1><h2>Score: {}/{} points</h2><h2>Completed Checks</h2><ul>{}</ul><h2>Penalties</h2><ul>{}</ul>",
+            "# {}\n\n## Scoring Report\n*Score: {}/{} points*\n### Completed Checks:\n{}\n## Penalties:\n{}",
             self.image_name,
             self.score,
             self.max_score,
@@ -60,12 +60,19 @@ impl Engine {
             penalty_str
         );
 
-        std::fs::write("./report.html", report).unwrap();
+        let auto_refresh_script = format!(
+            "<script> function autoRefresh() {{ window.location = window.location.href; }} setInterval('autoRefresh()', {}); </script>",
+            self.config.auto_refresh
+        );
+
+        std::fs::write(
+            format!("{}/report.html", self.config.auto_export_path),
+            format!("{} {}", markdown::to_html(&report), auto_refresh_script),
+        )
+        .unwrap();
     }
 
     pub fn run_engine(&mut self) {
-        println!("Running Checks");
-
         // Run check, if completed, add remove it from the
         for check_o in &mut self.checks {
             let check = check_o.clone().run_check();
@@ -88,10 +95,6 @@ impl Engine {
                     .show()
                     .unwrap();
 
-                println!(
-                    "Penalty: {} points, message: {}",
-                    check.points, check.message
-                );
                 continue;
             }
 
@@ -113,11 +116,6 @@ impl Engine {
                     .icon("info")
                     .show()
                     .unwrap();
-
-                println!(
-                    "Completion: {} points, message: {}",
-                    check.points, check.message
-                );
             }
         }
 
