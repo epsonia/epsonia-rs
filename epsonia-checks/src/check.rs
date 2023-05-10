@@ -15,6 +15,12 @@ pub enum CheckKind {
         file_path: String,
         should_exist: bool,
     },
+    FileLineContains {
+        file_path: String,
+        line: i32,
+        line_content: String,
+        should_contain: bool,
+    },
 }
 
 impl Check {
@@ -39,6 +45,17 @@ impl Check {
                 file_path,
                 should_exist,
             } => Path::new(file_path).exists() == *should_exist,
+            CheckKind::FileLineContains {
+                file_path,
+                line,
+                line_content,
+                should_contain,
+            } => {
+                let file = std::fs::read_to_string(file_path).unwrap();
+                let lines: Vec<&str> = file.split('\n').collect();
+                let line = lines[(*line - 1) as usize];
+                line.contains(line_content) == *should_contain
+            }
         };
 
         self.clone()
