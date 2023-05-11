@@ -27,6 +27,10 @@ pub enum CheckKind {
         whitespace_matters: bool,
         should_contain: bool,
     },
+    ServiceUp {
+        service_name: String,
+        should_be_up: bool,
+    },
 }
 
 impl Check {
@@ -75,6 +79,18 @@ impl Check {
                 } else {
                     file.replace(' ', "").contains(content) == *should_contain
                 }
+            }
+            CheckKind::ServiceUp {
+                service_name,
+                should_be_up,
+            } => {
+                let output = std::process::Command::new("systemctl")
+                    .arg("is-active")
+                    .arg(service_name)
+                    .output()
+                    .expect("Failed to execute command");
+                let output = String::from_utf8_lossy(&output.stdout);
+                output.contains("inactive") != *should_be_up
             }
         };
 

@@ -30,3 +30,12 @@ pub struct FileContainsContent {
     pub whitespace_matters: bool,
     pub should_contain: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ServiceUp {
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub service_name: String,
+    pub should_be_up: bool,
+}
