@@ -1,13 +1,14 @@
 use epsonia_checks::check::{Check, CheckKind};
 use serde::{Deserialize, Serialize};
 
-use crate::models::{FileExists, FileLineContains};
+use crate::models::{FileContainsContent, FileExists, FileLineContains};
 
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChecksConfig {
     pub file_exists: Option<Vec<FileExists>>,
     pub file_line_contains: Option<Vec<FileLineContains>>,
+    pub file_contains_content: Option<Vec<FileContainsContent>>,
 }
 
 pub fn parse_checks_config() -> ChecksConfig {
@@ -57,6 +58,23 @@ pub fn get_checks() -> Vec<Check> {
                     file_path: check.file_path,
                     line: check.line,
                     line_content: check.line_content,
+                    should_contain: check.should_contain,
+                },
+            ));
+        }
+    }
+
+    if let Some(file_contains_content) = checks_config.file_contains_content {
+        for check in file_contains_content {
+            checks.push(Check::new(
+                check.points,
+                check.message,
+                check.penalty_message,
+                false,
+                CheckKind::FileContainsContent {
+                    file_path: check.file_path,
+                    content: check.content,
+                    whitespace_matters: check.whitespace_matters,
                     should_contain: check.should_contain,
                 },
             ));

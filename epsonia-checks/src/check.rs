@@ -21,6 +21,12 @@ pub enum CheckKind {
         line_content: String,
         should_contain: bool,
     },
+    FileContainsContent {
+        file_path: String,
+        content: String,
+        whitespace_matters: bool,
+        should_contain: bool,
+    },
 }
 
 impl Check {
@@ -51,10 +57,24 @@ impl Check {
                 line_content,
                 should_contain,
             } => {
-                let file = std::fs::read_to_string(file_path).unwrap();
+                // Don't have error handling yet.
+                let file = std::fs::read_to_string(file_path).unwrap_or_else(|_| String::new());
                 let lines: Vec<&str> = file.split('\n').collect();
                 let line = lines[(*line - 1) as usize];
                 line.contains(line_content) == *should_contain
+            }
+            CheckKind::FileContainsContent {
+                file_path,
+                content,
+                whitespace_matters,
+                should_contain,
+            } => {
+                let file = std::fs::read_to_string(file_path).unwrap_or_else(|_| String::new());
+                if *whitespace_matters {
+                    file.contains(content) == *should_contain
+                } else {
+                    file.replace(' ', "").contains(content) == *should_contain
+                }
             }
         };
 

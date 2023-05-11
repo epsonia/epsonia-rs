@@ -19,3 +19,14 @@ pub struct FileLineContains {
     pub line_content: String,
     pub should_contain: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct FileContainsContent {
+    pub file_path: String,
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub content: String,
+    pub whitespace_matters: bool,
+    pub should_contain: bool,
+}
