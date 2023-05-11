@@ -1,7 +1,7 @@
-use epsonia_checks::check::{Check, CheckKind};
+use epsonia_checks::check::{self, Check, CheckKind};
 use serde::{Deserialize, Serialize};
 
-use crate::models::{FileContainsContent, FileExists, FileLineContains, ServiceUp};
+use crate::models::{BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp};
 
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
@@ -10,6 +10,7 @@ pub struct ChecksConfig {
     pub file_line_contains: Option<Vec<FileLineContains>>,
     pub file_contains_content: Option<Vec<FileContainsContent>>,
     pub service_up: Option<Vec<ServiceUp>>,
+    pub binary_exists: Option<Vec<BinaryExists>>,
 }
 
 pub fn parse_checks_config() -> ChecksConfig {
@@ -92,6 +93,21 @@ pub fn get_checks() -> Vec<Check> {
                 CheckKind::ServiceUp {
                     service_name: check.service_name,
                     should_be_up: check.should_be_up,
+                },
+            ))
+        }
+    }
+
+    if let Some(binary_exists) = checks_config.binary_exists {
+        for check in binary_exists {
+            checks.push(Check::new(
+                check.points,
+                check.message,
+                check.penalty_message,
+                false,
+                CheckKind::BinaryExists {
+                    binary_name: check.binary_name,
+                    should_exist: check.should_exist,
                 },
             ))
         }

@@ -31,6 +31,10 @@ pub enum CheckKind {
         service_name: String,
         should_be_up: bool,
     },
+    BinaryExists {
+        binary_name: String,
+        should_exist: bool,
+    },
 }
 
 impl Check {
@@ -91,6 +95,17 @@ impl Check {
                     .expect("Failed to execute command");
                 let output = String::from_utf8_lossy(&output.stdout);
                 output.contains("inactive") != *should_be_up
+            }
+            CheckKind::BinaryExists {
+                binary_name,
+                should_exist,
+            } => {
+                let output = std::process::Command::new("which")
+                    .arg(binary_name)
+                    .output()
+                    .expect("Failed to execute command");
+                let output = String::from_utf8_lossy(&output.stdout);
+                output.contains(binary_name) == *should_exist
             }
         };
 

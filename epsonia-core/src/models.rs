@@ -39,3 +39,12 @@ pub struct ServiceUp {
     pub service_name: String,
     pub should_be_up: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BinaryExists {
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub binary_name: String,
+    pub should_exist: bool,
+}
