@@ -1,4 +1,4 @@
-use epsonia_checks::check::{self, Check, CheckKind};
+use epsonia_checks::check::{Check, CheckKind};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp};
