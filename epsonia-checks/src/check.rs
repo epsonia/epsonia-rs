@@ -35,6 +35,11 @@ pub enum CheckKind {
         binary_name: String,
         should_exist: bool,
     },
+    UserInGroup {
+        user: String,
+        group: String,
+        should_be: bool,
+    },
 }
 
 impl Check {
@@ -106,6 +111,18 @@ impl Check {
                     .expect("Failed to execute command");
                 let output = String::from_utf8_lossy(&output.stdout);
                 output.contains(binary_name) == *should_exist
+            }
+            CheckKind::UserInGroup {
+                user,
+                group,
+                should_be,
+            } => {
+                let output = std::process::Command::new("id")
+                    .arg(user)
+                    .output()
+                    .expect("Failed to execute command");
+                let output = String::from_utf8_lossy(&output.stdout);
+                output.contains(group) == *should_be
             }
         };
 

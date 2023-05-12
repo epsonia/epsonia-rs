@@ -48,3 +48,13 @@ pub struct BinaryExists {
     pub binary_name: String,
     pub should_exist: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserInGroup {
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub user: String,
+    pub group: String,
+    pub should_be: bool,
+}
