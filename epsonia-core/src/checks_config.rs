@@ -2,8 +2,11 @@ use epsonia_checks::check::{Check, CheckKind};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{
-    BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp, UserInGroup,
+    BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp, UserConfig,
+    UserInGroup,
 };
+
+use epsonia_util::{get_users, User};
 
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
@@ -14,6 +17,7 @@ pub struct ChecksConfig {
     pub service_up: Option<Vec<ServiceUp>>,
     pub binary_exists: Option<Vec<BinaryExists>>,
     pub user_in_group: Option<Vec<UserInGroup>>,
+    pub users: Option<Vec<UserConfig>>,
 }
 
 pub fn parse_checks_config() -> ChecksConfig {
@@ -129,6 +133,35 @@ pub fn get_checks() -> Vec<Check> {
                     should_be: check.should_be,
                 },
             ))
+        }
+    }
+
+    if let Some(users) = checks_config.users {
+        for check in users {
+            if let Some(admin_check) = check.admin_config {
+                checks.push(Check::new(
+                    admin_check.points,
+                    admin_check.message,
+                    admin_check.penalty_message,
+                    false,
+                    CheckKind::UserIsAdminstrator {
+                        user: admin_check.user,
+                        should_be: admin_check.should_be,
+                    },
+                ));
+            }
+
+            checks.push(Check::new(
+                check.points,
+                check.message,
+                check.penalty_message,
+                false,
+                CheckKind::User {
+                    user: check.user,
+                    should_exist: true,
+                    does_exist: check.initial_exist,
+                },
+            ));
         }
     }
     checks

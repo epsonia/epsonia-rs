@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use epsonia_util::get_users;
+
 #[derive(PartialEq, Clone)]
 pub struct Check {
     pub points: i32,
@@ -39,6 +41,15 @@ pub enum CheckKind {
         user: String,
         group: String,
         should_be: bool,
+    },
+    UserIsAdminstrator {
+        user: String,
+        should_be: bool,
+    },
+    User {
+        user: String,
+        should_exist: bool,
+        does_exist: bool,
     },
 }
 
@@ -124,6 +135,31 @@ impl Check {
                 let output = String::from_utf8_lossy(&output.stdout);
                 output.contains(group) == *should_be
             }
+            CheckKind::UserIsAdminstrator { user, should_be } => {
+                let output = std::process::Command::new("id")
+                    .arg(user)
+                    .output()
+                    .expect("Failed to execute command");
+                let output = String::from_utf8_lossy(&output.stdout);
+                output.contains("sudo") == *should_be
+            }
+            CheckKind::User {
+                user,
+                should_exist,
+                does_exist, // Initial exist
+            } => {
+                if *should_exist && *does_exist && get_users().iter().any(|u| u.name == *user) {
+                    true
+                } else if !should_exist
+                    && !does_exist
+                    && !get_users().iter().any(|u| u.name == *user)
+                {
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => panic!("Unknown check kind"),
         };
 
         self.clone()

@@ -58,3 +58,24 @@ pub struct UserInGroup {
     pub group: String,
     pub should_be: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserAdministrator {
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub user: String,
+    pub should_be: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserConfig {
+    pub user: String,
+    pub should_exist: bool,
+    pub initial_exist: bool,
+    pub points: i32,
+    pub message: String,
+    pub penalty_message: String,
+    pub is_primary_user: bool,
+    pub admin_config: Option<UserAdministrator>,
+}
