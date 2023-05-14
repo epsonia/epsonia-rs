@@ -6,8 +6,6 @@ use crate::models::{
     UserInGroup,
 };
 
-use epsonia_util::{get_users, User};
-
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChecksConfig {

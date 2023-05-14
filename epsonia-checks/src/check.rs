@@ -159,7 +159,6 @@ impl Check {
                     false
                 }
             }
-            _ => panic!("Unknown check kind"),
         };
 
         self.clone()
