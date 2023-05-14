@@ -84,8 +84,12 @@ impl Check {
                 // Don't have error handling yet.
                 let file = std::fs::read_to_string(file_path).unwrap_or_else(|_| String::new());
                 let lines: Vec<&str> = file.split('\n').collect();
-                let line = lines[(*line - 1) as usize];
-                line.contains(line_content) == *should_contain
+                if lines.len() < *line as usize {
+                    false
+                } else {
+                    let line = lines[(*line - 1) as usize];
+                    line.contains(line_content) == *should_contain
+                }
             }
             CheckKind::FileContainsContent {
                 file_path,
