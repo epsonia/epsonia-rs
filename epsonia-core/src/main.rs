@@ -3,12 +3,8 @@ mod config;
 mod engine;
 mod models;
 
-use std::borrow::Borrow;
-
 use clap::{Parser, Subcommand};
 use engine::Engine;
-
-use epsonia_checks::{check::Check, hidden_check::HiddenPenalty};
 
 #[derive(Parser)]
 #[command(

@@ -1,7 +1,5 @@
 use std::path::Path;
 
-use epsonia_util::util::get_users;
-
 #[derive(PartialEq, Clone)]
 pub struct Check {
     pub points: i32,
@@ -136,31 +134,11 @@ impl Check {
                 output.contains(group) == *should_be
             }
             CheckKind::UserIsAdminstrator {
-                user,
-                should_be,
-                initial_admin,
+                user: _,
+                should_be: _,
+                initial_admin: _,
             } => {
-                let output = std::process::Command::new("id")
-                    .arg(user)
-                    .output()
-                    .expect("Failed to execute command");
-                let output = String::from_utf8_lossy(&output.stdout);
-
-                let is = output.contains("sudo");
-
-                if *should_be && *initial_admin && is {
-                    true
-                } else {
-                    if is && !*initial_admin && *should_be {
-                        true
-                    } else if is && *initial_admin && !should_be {
-                        false
-                    } else if !is && *initial_admin && !should_be {
-                        true
-                    } else {
-                        false
-                    }
-                }
+                todo!()
             }
         };
 

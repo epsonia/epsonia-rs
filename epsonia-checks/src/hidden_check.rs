@@ -39,11 +39,7 @@ impl HiddenPenalty {
                     }
                 });
 
-                if user_exists == *should_exist {
-                    false
-                } else {
-                    true
-                }
+                user_exists != *should_exist
             }
         };
 

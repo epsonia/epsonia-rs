@@ -169,7 +169,8 @@ impl Engine {
                 continue;
             }
 
-            if (check.completed && !self.completed_checks.contains(check_o))
+            if self.penalties.contains(&Penalty::from(check_o.clone()))
+                || !self.completed_checks.contains(check_o) && check.completed
                 || (check.completed && self.penalties.contains(&Penalty::from(check_o.clone())))
             {
                 self.score += check.points;
