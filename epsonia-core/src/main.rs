@@ -3,10 +3,12 @@ mod config;
 mod engine;
 mod models;
 
+use std::borrow::Borrow;
+
 use clap::{Parser, Subcommand};
 use engine::Engine;
 
-use epsonia_checks::check::Check;
+use epsonia_checks::{check::Check, hidden_check::HiddenPenalty};
 
 #[derive(Parser)]
 #[command(
@@ -55,12 +57,13 @@ async fn main() {
 async fn run(export: &Option<String>, config: &Option<String>) {
     let config_path: String = config.clone().unwrap_or(String::from("./config"));
 
-    let checks: &Vec<Check> = &checks_config::get_checks();
+    let (checks, hidden_penalties) = checks_config::get_checks();
     let config: config::Config = config::Config::get(config_path);
 
     let mut engine: Engine = Engine::new(
-        checks.to_vec(),
-        checks_config::get_max_points(checks),
+        checks.clone(),
+        hidden_penalties,
+        checks_config::get_max_points(&checks),
         if let Some(export) = export {
             config::Config {
                 auto_export_path: export.clone(),

@@ -79,3 +79,13 @@ pub struct UserConfig {
     pub is_primary_user: bool,
     pub admin_config: Option<UserAdministrator>,
 }
+
+// Hidden Penalties
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserMustExist {
+    pub user: String,
+    pub deduction: i32,
+    pub message: String,
+    pub should_exist: bool,
+}

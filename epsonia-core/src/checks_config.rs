@@ -1,10 +1,26 @@
-use epsonia_checks::check::{Check, CheckKind};
+use epsonia_checks::{
+    check::{Check, CheckKind},
+    hidden_check::{HiddenPenalty, HiddenPenaltyKind},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::models::{
     BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp, UserConfig,
-    UserInGroup,
+    UserInGroup, UserMustExist,
 };
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HiddenPenaltiesConfig {
+    pub user_must_exist: Option<Vec<UserMustExist>>,
+}
+
+impl HiddenPenaltiesConfig {
+    pub fn empty() -> Self {
+        HiddenPenaltiesConfig {
+            user_must_exist: None,
+        }
+    }
+}
 
 // Note: Completed is a config value.
 #[derive(Debug, Serialize, Deserialize)]
@@ -16,6 +32,7 @@ pub struct ChecksConfig {
     pub binary_exists: Option<Vec<BinaryExists>>,
     pub user_in_group: Option<Vec<UserInGroup>>,
     pub users: Option<Vec<UserConfig>>,
+    pub hidden_penalties: Option<HiddenPenaltiesConfig>,
 }
 
 pub fn parse_checks_config() -> ChecksConfig {
@@ -34,7 +51,7 @@ pub fn get_max_points(checks: &Vec<Check>) -> i32 {
     max_points
 }
 
-pub fn get_checks() -> Vec<Check> {
+pub fn get_checks() -> (Vec<Check>, Vec<HiddenPenalty>) {
     let checks_config = parse_checks_config();
 
     let mut checks: Vec<Check> = Vec::new();
@@ -134,35 +151,55 @@ pub fn get_checks() -> Vec<Check> {
         }
     }
 
-    if let Some(users) = checks_config.users {
-        for check in users {
-            if let Some(admin_check) = check.admin_config {
-                checks.push(Check::new(
-                    admin_check.points,
-                    admin_check.message,
-                    admin_check.penalty_message,
-                    false,
-                    CheckKind::UserIsAdminstrator {
-                        user: check.user.clone(),
-                        should_be: admin_check.should_be,
-                        initial_admin: admin_check.initial_admin,
-                    },
-                ));
-            }
+    // if let Some(users) = checks_config.users {
+    //     for check in users {
+    //         if let Some(admin_check) = check.admin_config {
+    //             checks.push(Check::new(
+    //                 admin_check.points,
+    //                 admin_check.message,
+    //                 admin_check.penalty_message,
+    //                 false,
+    //                 CheckKind::UserIsAdminstrator {
+    //                     user: check.user.clone(),
+    //                     should_be: admin_check.should_be,
+    //                     initial_admin: admin_check.initial_admin,
+    //                 },
+    //             ));
+    //         }
 
-            checks.push(Check::new(
-                check.points,
-                check.message,
-                check.penalty_message,
-                false,
-                CheckKind::User {
-                    user: check.user,
-                    should_exist: true,
-                    does_exist: check.initial_exist,
-                    is_primary_user: check.is_primary_user,
+    //         checks.push(Check::new(
+    //             check.points,
+    //             check.message,
+    //             check.penalty_message,
+    //             false,
+    //             CheckKind::User {
+    //                 user: check.user,
+    //                 should_exist: true,
+    //                 does_exist: check.initial_exist,
+    //                 is_primary_user: check.is_primary_user,
+    //             },
+    //         ));
+    //     }
+    // }
+
+    let mut hidden_penalties: Vec<HiddenPenalty> = Vec::new();
+
+    let hpconf = checks_config
+        .hidden_penalties
+        .unwrap_or_else(HiddenPenaltiesConfig::empty);
+
+    if let Some(user_must_exist) = hpconf.user_must_exist {
+        for pen in user_must_exist {
+            hidden_penalties.push(HiddenPenalty::new(
+                pen.deduction,
+                pen.message,
+                HiddenPenaltyKind::UserMustExist {
+                    user: pen.user,
+                    should_exist: pen.should_exist,
                 },
-            ));
+            ))
         }
     }
-    checks
+
+    (checks, hidden_penalties)
 }
