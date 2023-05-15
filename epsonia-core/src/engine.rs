@@ -1,4 +1,4 @@
-use epsonia_checks::check::Check;
+use epsonia_checks::check::{Check, CheckKind};
 use notify_rust::Notification;
 
 use crate::config::Config;
@@ -10,6 +10,8 @@ pub struct Engine {
     checks: Vec<Check>,
     completed_checks: Vec<Check>,
     penalties: Vec<Check>,
+    hidden_completions: Vec<Check>,
+    hidden_penalties: Vec<Check>,
     config: Config,
 }
 
@@ -22,6 +24,8 @@ impl Engine {
             checks,
             penalties: Vec::new(),
             completed_checks: Vec::new(),
+            hidden_completions: Vec::new(),
+            hidden_penalties: Vec::new(),
             config,
         }
     }
@@ -34,12 +38,16 @@ impl Engine {
             completed_str.push_str(&format!("- {} - {} points\n", check.message, check.points));
         });
 
-        self.penalties.iter().for_each(|check| {
-            penalty_str.push_str(&format!(
-                "- {} - {} points\n",
-                check.penalty_message, check.points
-            ));
-        });
+        self.penalties
+            .clone()
+            .iter()
+            .chain(self.hidden_completions.iter())
+            .for_each(|check| {
+                penalty_str.push_str(&format!(
+                    "- {} -{} points\n",
+                    check.penalty_message, check.points
+                ));
+            });
 
         let report = format!(
             "# {}\n\n## Scoring Report\n*Score: {}/{} points*\n### Completed Checks:\n{}\n## Penalties:\n{}",
@@ -67,6 +75,65 @@ impl Engine {
         for check_o in &mut self.checks {
             let check = check_o.clone().run_check();
 
+            // Hidden check
+            match &check.kind {
+                CheckKind::User {
+                    user: _,
+                    should_exist: _,
+                    does_exist: _,
+                    is_primary_user: _,
+                }
+                | CheckKind::UserIsAdminstrator {
+                    user: _,
+                    should_be: _,
+                    initial_admin: _,
+                } => {
+                    if self.hidden_completions.contains(check_o) && !check.completed {
+                        self.hidden_completions.remove(
+                            self.hidden_completions
+                                .iter()
+                                .position(|x| x == check_o)
+                                .unwrap(),
+                        );
+                        self.hidden_penalties.push(check.clone());
+                        self.score -= check.points;
+
+                        Notification::new()
+                            .summary("Penalty!")
+                            .body(&format!("You lost {} points!", check.points))
+                            .icon("dialog-warning")
+                            .show()
+                            .unwrap();
+                    }
+
+                    if (check.completed && !self.hidden_completions.contains(check_o))
+                        || (check.completed && self.hidden_penalties.contains(check_o))
+                    {
+                        self.score += check.points;
+                        self.hidden_completions.push(check_o.clone());
+
+                        if self.hidden_penalties.contains(check_o) {
+                            self.hidden_penalties.remove(
+                                self.hidden_penalties
+                                    .iter()
+                                    .position(|x| x == check_o)
+                                    .unwrap(),
+                            );
+                        }
+
+                        Notification::new()
+                            .summary("Good Job!")
+                            .body(&format!("You gained {} points!", check.points))
+                            .icon("info")
+                            .show()
+                            .unwrap();
+                    }
+
+                    continue;
+                }
+                _ => {}
+            }
+
             // Penalty
             if self.completed_checks.contains(check_o) && !check.completed {
                 self.completed_checks.remove(
@@ -87,8 +154,9 @@ impl Engine {
 
                 continue;
             }
-            if (self.penalties.contains(check_o) || !self.completed_checks.contains(check_o))
-                && check.completed
+
+            if (check.completed && !self.completed_checks.contains(check_o))
+                || (check.completed && self.penalties.contains(check_o))
             {
                 self.score += check.points;
                 self.completed_checks.push(check_o.clone());
@@ -116,8 +184,9 @@ impl Engine {
             );
         });
 
-        self.penalties.iter().for_each(|p| {
+        // "Chains" the hidden penalties and the normal penalties together
+        for p in self.penalties.iter().chain(self.hidden_penalties.iter()) {
             println!("Penalty - {} - ({}) points", p.penalty_message, p.points);
-        });
+        }
     }
 }

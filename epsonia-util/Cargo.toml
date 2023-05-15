@@ -6,3 +6,5 @@ edition = "2021"
 homepage = "https://epsonia.matees.net"
 repository = "https://github.com/maytees/epsonia-rs"
 license = "Apache-2.0 license"
+
+[dependencies]

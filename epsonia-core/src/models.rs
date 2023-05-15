@@ -64,8 +64,8 @@ pub struct UserAdministrator {
     pub points: i32,
     pub message: String,
     pub penalty_message: String,
-    pub user: String,
     pub should_be: bool,
+    pub initial_admin: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

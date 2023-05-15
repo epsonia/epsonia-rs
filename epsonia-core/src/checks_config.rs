@@ -143,8 +143,9 @@ pub fn get_checks() -> Vec<Check> {
                     admin_check.penalty_message,
                     false,
                     CheckKind::UserIsAdminstrator {
-                        user: admin_check.user,
+                        user: check.user.clone(),
                         should_be: admin_check.should_be,
+                        initial_admin: admin_check.initial_admin,
                     },
                 ));
             }
@@ -158,6 +159,7 @@ pub fn get_checks() -> Vec<Check> {
                     user: check.user,
                     should_exist: true,
                     does_exist: check.initial_exist,
+                    is_primary_user: check.is_primary_user,
                 },
             ));
         }

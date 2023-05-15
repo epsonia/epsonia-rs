@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use epsonia_util::get_users;
+use epsonia_util::util::get_users;
 
 #[derive(PartialEq, Clone)]
 pub struct Check {
@@ -45,11 +45,13 @@ pub enum CheckKind {
     UserIsAdminstrator {
         user: String,
         should_be: bool,
+        initial_admin: bool,
     },
     User {
         user: String,
         should_exist: bool,
         does_exist: bool,
+        is_primary_user: bool,
     },
 }
 
@@ -139,28 +141,58 @@ impl Check {
                 let output = String::from_utf8_lossy(&output.stdout);
                 output.contains(group) == *should_be
             }
-            CheckKind::UserIsAdminstrator { user, should_be } => {
+            CheckKind::UserIsAdminstrator {
+                user,
+                should_be,
+                initial_admin,
+            } => {
                 let output = std::process::Command::new("id")
                     .arg(user)
                     .output()
                     .expect("Failed to execute command");
                 let output = String::from_utf8_lossy(&output.stdout);
-                output.contains("sudo") == *should_be
+
+                let is = output.contains("sudo");
+
+                if *should_be && *initial_admin && is {
+                    true
+                } else {
+                    if is && !*initial_admin && *should_be {
+                        true
+                    } else if is && *initial_admin && !should_be {
+                        false
+                    } else if !is && *initial_admin && !should_be {
+                        true
+                    } else {
+                        false
+                    }
+                }
             }
             CheckKind::User {
                 user,
                 should_exist,
-                does_exist, // Initial exist
+                does_exist,
+                is_primary_user,
             } => {
-                if *should_exist && *does_exist && get_users().iter().any(|u| u.name == *user) {
-                    true
-                } else if !should_exist
-                    && !does_exist
-                    && !get_users().iter().any(|u| u.name == *user)
-                {
+                let users = get_users();
+                // ou is option user because it returns option and i dont know how to name stuff
+                let user_exists = users
+                    .iter()
+                    .any(|ou| ou.as_ref().map_or(false, |u| u.name == *user));
+
+                if *should_exist && *does_exist && user_exists && !is_primary_user {
                     true
                 } else {
-                    false
+                    println!("User {} exists: {}", user, user_exists);
+                    if user_exists && !*does_exist && *should_exist {
+                        true
+                    } else if user_exists && *does_exist && !should_exist {
+                        false
+                    } else if !user_exists && *does_exist && !should_exist {
+                        true
+                    } else {
+                        false
+                    }
                 }
             }
         };
