@@ -1,7 +1,35 @@
-use epsonia_checks::check::Check;
+use epsonia_checks::{check::Check, hidden_check::HiddenPenalty};
 use notify_rust::Notification;
 
 use crate::config::Config;
+
+#[derive(Clone, PartialEq)]
+struct Penalty {
+    deduction: i32,
+    message: String,
+    active: bool,
+}
+
+impl From<Check> for Penalty {
+    fn from(value: Check) -> Self {
+        Penalty {
+            deduction: value.points,
+            message: value.penalty_message,
+            active: false,
+        }
+    }
+}
+
+impl From<HiddenPenalty> for Penalty {
+    fn from(value: HiddenPenalty) -> Self {
+        Penalty {
+            deduction: value.deduction,
+            message: value.message,
+            active: false,
+        }
+    }
+}
+
 pub struct Engine {
     image_name: String,
     score: i32,
@@ -9,17 +37,52 @@ pub struct Engine {
     // Don't worry about this mess.
     checks: Vec<Check>,
     completed_checks: Vec<Check>,
-    penalties: Vec<Check>,
+    penalties: Vec<Penalty>,
+    hidden_penalties: Vec<HiddenPenalty>,
     config: Config,
 }
 
+enum EpsoniaNotification {
+    Goodjob,
+    Penalty,
+}
+
+impl EpsoniaNotification {
+    pub fn show(&self, points: i32) {
+        match self {
+            EpsoniaNotification::Goodjob => {
+                Notification::new()
+                    .summary("Good job!")
+                    .body(&format!("You gained {} points!", points))
+                    .icon("dialog-information")
+                    .show()
+                    .unwrap();
+            }
+            EpsoniaNotification::Penalty => {
+                Notification::new()
+                    .summary("Penalty!")
+                    .body(&format!("You lost {} points!", points))
+                    .icon("dialog-warning")
+                    .show()
+                    .unwrap();
+            }
+        }
+    }
+}
+
 impl Engine {
-    pub fn new(checks: Vec<Check>, max_score: i32, config: Config) -> Self {
+    pub fn new(
+        checks: Vec<Check>,
+        hidden_penalties: Vec<HiddenPenalty>,
+        max_score: i32,
+        config: Config,
+    ) -> Self {
         Engine {
             image_name: String::from(""),
             score: 0,
             max_score,
             checks,
+            hidden_penalties,
             penalties: Vec::new(),
             completed_checks: Vec::new(),
             config,
@@ -34,10 +97,10 @@ impl Engine {
             completed_str.push_str(&format!("- {} - {} points\n", check.message, check.points));
         });
 
-        self.penalties.iter().for_each(|check| {
+        self.penalties.clone().iter().for_each(|check| {
             penalty_str.push_str(&format!(
-                "- {} - {} points\n",
-                check.penalty_message, check.points
+                "- {} -{} points\n",
+                check.message, check.deduction
             ));
         });
 
@@ -63,8 +126,33 @@ impl Engine {
     }
 
     pub fn run_engine(&mut self) {
+        // Hidden checks
+        for pen in &mut self.hidden_penalties {
+            pen.run_check();
+
+            if pen.active && !self.penalties.contains(&Penalty::from(pen.clone())) {
+                self.penalties.push(Penalty::from(pen.clone()));
+                self.score -= pen.deduction;
+
+                EpsoniaNotification::Penalty.show(pen.deduction);
+                continue;
+            }
+
+            if !pen.active && self.penalties.contains(&Penalty::from(pen.clone())) {
+                self.penalties.remove(
+                    self.penalties
+                        .iter()
+                        .position(|x| x == &Penalty::from(pen.clone()))
+                        .unwrap(),
+                );
+                self.score += pen.deduction;
+
+                EpsoniaNotification::Goodjob.show(pen.deduction);
+            }
+        }
+
         // Run check, if completed, add remove it from the
-        for check_o in &mut self.checks {
+        for check_o in &self.checks {
             let check = check_o.clone().run_check();
 
             // Penalty
@@ -75,56 +163,31 @@ impl Engine {
                         .position(|x| x == check_o)
                         .unwrap(),
                 );
-                self.penalties.push(check.clone());
+                self.penalties.push(Penalty::from(check.clone()));
                 self.score -= check.points;
 
-                Notification::new()
-                    .summary("Penalty!")
-                    .body(&format!("You lost {} points!", check.points))
-                    .icon("dialog-warning")
-                    .show()
-                    .unwrap();
-
+                EpsoniaNotification::Penalty.show(check.points);
                 continue;
             }
-            if (self.penalties.contains(check_o) || !self.completed_checks.contains(check_o))
-                && check.completed
+
+            if self.penalties.contains(&Penalty::from(check_o.clone()))
+                || !self.completed_checks.contains(check_o) && check.completed
+                || (check.completed && self.penalties.contains(&Penalty::from(check_o.clone())))
             {
                 self.score += check.points;
                 self.completed_checks.push(check_o.clone());
 
-                if self.penalties.contains(check_o) {
-                    self.penalties
-                        .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
+                if self.penalties.contains(&Penalty::from(check_o.clone())) {
+                    self.penalties.remove(
+                        self.penalties
+                            .iter()
+                            .position(|x| x == &Penalty::from(check_o.clone()))
+                            .unwrap(),
+                    );
                 }
 
-                Notification::new()
-                    .summary("Good Job!")
-                    .body(&format!("You gained {} points!", check.points))
-                    .icon("info")
-                    .show()
-                    .unwrap();
+                EpsoniaNotification::Goodjob.show(check.points);
             }
-
-            // // Completion
-            // if check.completed && !self.completed_checks.contains(check_o)
-            //     || check.completed && self.penalties.contains(check_o)
-            // {
-            //     self.score += check.points;
-            //     self.completed_checks.push(check_o.clone());
-
-            //     if self.penalties.contains(check_o) {
-            //         self.penalties
-            //             .remove(self.penalties.iter().position(|x| x == check_o).unwrap());
-            //     }
-
-            //     Notification::new()
-            //         .summary("Good Job!")
-            //         .body(&format!("You gained {} points!", check.points))
-            //         .icon("info")
-            //         .show()
-            //         .unwrap();
-            // }
         }
 
         self.set_scoring_report();
@@ -136,8 +199,8 @@ impl Engine {
             );
         });
 
-        self.penalties.iter().for_each(|p| {
-            println!("Penalty - {} - ({}) points", p.penalty_message, p.points);
-        });
+        self.penalties
+            .iter()
+            .for_each(|p| println!("Penalty - {}  -({}) points", p.message, p.deduction));
     }
 }

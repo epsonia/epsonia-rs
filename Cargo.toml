@@ -1,7 +1,8 @@
 [workspace]
 members = [
     "epsonia-core",
-    "epsonia-checks"
+    "epsonia-checks",
+    "epsonia-util"
 ]
 
 default-members = [

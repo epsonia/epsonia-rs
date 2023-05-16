@@ -389,6 +389,7 @@ dependencies = [
 name = "epsonia-checks"
 version = "0.1.0"
 dependencies = [
+ "epsonia-util",
  "serde",
  "serde_json",
 ]
@@ -399,12 +400,17 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "epsonia-checks",
+ "epsonia-util",
  "markdown",
  "notify-rust",
  "serde",
  "serde_json",
  "tokio",
 ]
+
+[[package]]
+name = "epsonia-util"
+version = "0.1.0"
 
 [[package]]
 name = "errno"
