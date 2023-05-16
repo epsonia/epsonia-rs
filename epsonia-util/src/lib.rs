@@ -19,4 +19,14 @@ pub mod util {
 
         users
     }
+
+    pub fn user_in_group(user: &String, group: &String) -> bool {
+        let output = std::process::Command::new("id")
+            .arg(user)
+            .output()
+            .expect("Failed to execute command");
+        let output = String::from_utf8_lossy(&output.stdout);
+
+        output.contains(group)
+    }
 }

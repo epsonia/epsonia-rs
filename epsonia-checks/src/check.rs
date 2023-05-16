@@ -1,5 +1,7 @@
 use std::path::Path;
 
+use epsonia_util::util::{get_users, user_in_group};
+
 #[derive(PartialEq, Clone)]
 pub struct Check {
     pub points: i32,
@@ -43,7 +45,11 @@ pub enum CheckKind {
     UserIsAdminstrator {
         user: String,
         should_be: bool,
-        initial_admin: bool,
+    },
+    // Assume that the user needs changing, if not, then do a hidden penalty
+    UserExists {
+        user: String,
+        should_be: bool,
     },
 }
 
@@ -125,20 +131,20 @@ impl Check {
                 user,
                 group,
                 should_be,
-            } => {
-                let output = std::process::Command::new("id")
-                    .arg(user)
-                    .output()
-                    .expect("Failed to execute command");
-                let output = String::from_utf8_lossy(&output.stdout);
-                output.contains(group) == *should_be
+            } => user_in_group(user, group) == *should_be,
+            CheckKind::UserIsAdminstrator { user, should_be } => {
+                user_in_group(user, &String::from("sudo")) == *should_be
             }
-            CheckKind::UserIsAdminstrator {
-                user: _,
-                should_be: _,
-                initial_admin: _,
-            } => {
-                todo!()
+            CheckKind::UserExists { user, should_be } => {
+                let exists = get_users().iter().any(|ou| {
+                    if let Some(u) = ou {
+                        u.name == *user
+                    } else {
+                        false
+                    }
+                });
+
+                exists == *should_be
             }
         };
 

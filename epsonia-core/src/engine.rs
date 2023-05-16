@@ -126,6 +126,7 @@ impl Engine {
     }
 
     pub fn run_engine(&mut self) {
+        // Hidden checks
         for pen in &mut self.hidden_penalties {
             pen.run_check();
 

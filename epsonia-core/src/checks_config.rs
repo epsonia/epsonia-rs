@@ -151,36 +151,33 @@ pub fn get_checks() -> (Vec<Check>, Vec<HiddenPenalty>) {
         }
     }
 
-    // if let Some(users) = checks_config.users {
-    //     for check in users {
-    //         if let Some(admin_check) = check.admin_config {
-    //             checks.push(Check::new(
-    //                 admin_check.points,
-    //                 admin_check.message,
-    //                 admin_check.penalty_message,
-    //                 false,
-    //                 CheckKind::UserIsAdminstrator {
-    //                     user: check.user.clone(),
-    //                     should_be: admin_check.should_be,
-    //                     initial_admin: admin_check.initial_admin,
-    //                 },
-    //             ));
-    //         }
+    if let Some(user) = checks_config.users {
+        for check in user {
+            checks.push(Check::new(
+                check.points,
+                check.message,
+                check.penalty_message,
+                false,
+                CheckKind::UserExists {
+                    user: check.user.clone(),
+                    should_be: check.should_exist,
+                },
+            ));
 
-    //         checks.push(Check::new(
-    //             check.points,
-    //             check.message,
-    //             check.penalty_message,
-    //             false,
-    //             CheckKind::User {
-    //                 user: check.user,
-    //                 should_exist: true,
-    //                 does_exist: check.initial_exist,
-    //                 is_primary_user: check.is_primary_user,
-    //             },
-    //         ));
-    //     }
-    // }
+            if let Some(ac) = check.admin_config {
+                checks.push(Check::new(
+                    ac.points,
+                    ac.message,
+                    ac.penalty_message,
+                    false,
+                    CheckKind::UserIsAdminstrator {
+                        user: check.user,
+                        should_be: ac.should_be,
+                    },
+                ))
+            }
+        }
+    }
 
     let mut hidden_penalties: Vec<HiddenPenalty> = Vec::new();
 
