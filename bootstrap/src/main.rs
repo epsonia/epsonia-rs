@@ -76,8 +76,7 @@ fn main() -> std::io::Result<()> {
 
     out.write_all(
         format!(
-            r"
-#!/bin/bash
+            r"#!/bin/bash
 #  ______                       _                         
 # |  ____|                     (_)                        
 # | |__   _ __  ___  ___  _ __  _  __ _                   
