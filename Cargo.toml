@@ -2,7 +2,8 @@
 members = [
     "epsonia-core",
     "epsonia-checks",
-    "epsonia-util"
+    "epsonia-util",
+    "bootstrap"
 ]
 
 default-members = [
