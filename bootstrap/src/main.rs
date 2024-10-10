@@ -65,7 +65,7 @@ fn main() -> std::io::Result<()> {
                         .as_str(),
                     );
                 }
-            },
+            }
             _ => {}
         }
     }

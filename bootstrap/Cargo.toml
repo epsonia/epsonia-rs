@@ -9,7 +9,7 @@ license = "Apache-2.0 license"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-epsonia-checks = { version = "0.1.0", path = "../epsonia-checks"}
-epsonia-core = { version = "0.1.0", path = "../epsonia-core"}
+epsonia-checks = { version = "0.1.0", path = "../epsonia-checks" }
+epsonia-core = { version = "0.1.0", path = "../epsonia-core" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
