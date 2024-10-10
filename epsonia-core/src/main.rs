@@ -11,7 +11,7 @@ use engine::Engine;
     author = "matees",
     version = "0.1.0",
     about = "Epsonia CLI",
-    long_about = "Epsonia CLI (long)"
+    long_about = "Epsonia CLI (long)",
 )]
 struct Cli {
     // Subcommands
