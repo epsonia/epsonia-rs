@@ -1,3 +1,5 @@
+_This project will be worked on again as of 10/10/24_
+
 <p align="center">
    <img alt="Epsonia" src="https://raw.githubusercontent.com/maytees/epsonia/master/LongBanner.svg" />
 </p>
@@ -6,7 +8,7 @@
 - [Resources](#resources)
 
 Epsonia vs Epsonia-rs: Epsonia-rs is a work in progress rewrite of Epsonia,
-in, you guessed it.. Rust! The project is almost the same *(functionality wise)* as the original
+in, you guessed it.. Rust! The project is almost the same _(functionality wise)_ as the original
 TS repo.
 
 # What is Epsonia
