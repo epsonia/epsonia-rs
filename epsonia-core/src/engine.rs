@@ -3,6 +3,8 @@ use notify_rust::Notification;
 
 use crate::config::Config;
 
+use std::error::Error;
+
 #[derive(Clone, PartialEq)]
 struct Penalty {
     deduction: i32,
@@ -89,43 +91,7 @@ impl Engine {
         }
     }
 
-    pub fn set_scoring_report(&self) {
-        let mut completed_str = String::from("");
-        let mut penalty_str = String::from("");
-
-        self.completed_checks.iter().for_each(|check| {
-            completed_str.push_str(&format!("- {} - {} points\n", check.message, check.points));
-        });
-
-        self.penalties.clone().iter().for_each(|check| {
-            penalty_str.push_str(&format!(
-                "- {} -{} points\n",
-                check.message, check.deduction
-            ));
-        });
-
-        let report = format!(
-            "# {}\n\n## Scoring Report\n*Score: {}/{} points*\n### Completed Checks:\n{}\n## Penalties:\n{}",
-            self.image_name,
-            self.score,
-            self.max_score,
-            completed_str,
-            penalty_str
-        );
-
-        let auto_refresh_script = format!(
-            "<script> function autoRefresh() {{ window.location = window.location.href; }} setInterval('autoRefresh()', {}); </script>",
-            self.config.auto_refresh
-        );
-
-        std::fs::write(
-            format!("{}/report.html", self.config.auto_export_path),
-            format!("{} {}", markdown::to_html(&report), auto_refresh_script),
-        )
-        .unwrap();
-    }
-
-    pub fn run_engine(&mut self) {
+    pub fn run_engine(&mut self) -> Result<(), Box<dyn Error>> {
         // Hidden checks
         for pen in &mut self.hidden_penalties {
             pen.run_check();
@@ -190,7 +156,7 @@ impl Engine {
             }
         }
 
-        self.set_scoring_report();
+        self.set_scoring_report()?;
 
         self.completed_checks.iter().for_each(|check| {
             println!(
@@ -202,5 +168,44 @@ impl Engine {
         self.penalties
             .iter()
             .for_each(|p| println!("Penalty - {}  -({}) points", p.message, p.deduction));
+
+        Ok(())
+    }
+
+    fn set_scoring_report(&self) -> Result<(), Box<dyn Error>> {
+        let mut completed_str = String::from("");
+        let mut penalty_str = String::from("");
+
+        self.completed_checks.iter().for_each(|check| {
+            completed_str.push_str(&format!("- {} - {} points\n", check.message, check.points));
+        });
+
+        self.penalties.clone().iter().for_each(|check| {
+            penalty_str.push_str(&format!(
+                "- {} -{} points\n",
+                check.message, check.deduction
+            ));
+        });
+
+        let report = format!(
+            "# {}\n\n## Scoring Report\n*Score: {}/{} points*\n### Completed Checks:\n{}\n## Penalties:\n{}",
+            self.image_name,
+            self.score,
+            self.max_score,
+            completed_str,
+            penalty_str
+        );
+
+        let auto_refresh_script = format!(
+            "<script> function autoRefresh() {{ window.location = window.location.href; }} setInterval('autoRefresh()', {}); </script>",
+            self.config.auto_refresh
+        );
+
+        std::fs::write(
+            format!("{}/report.html", self.config.auto_export_path),
+            format!("{} {}", markdown::to_html(&report), auto_refresh_script),
+        )?;
+
+        Ok(())
     }
 }

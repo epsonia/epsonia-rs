@@ -5,16 +5,16 @@ mod models;
 
 use clap::{Parser, Subcommand};
 use engine::Engine;
+use std::error::Error;
 
 #[derive(Parser)]
 #[command(
     author = "matees",
     version = "0.1.0",
-    about = "Epsonia CLI",
-    long_about = "Epsonia CLI (long)",
+    about = "Epsonia: A cybersecurity scoring engine for practice and competition",
+    long_about = "Epsonia is a scoring engine based on the CyberPatriot competition. It searches an environment for vulnerabilities and scores based on their status (fixed, not fixed, or penalized)."
 )]
 struct Cli {
-    // Subcommands
     #[command(subcommand)]
     subcommand: Option<SubCommands>,
 }
@@ -22,39 +22,46 @@ struct Cli {
 #[derive(Subcommand)]
 enum SubCommands {
     Run {
-        // Export folder - Optional
         #[arg(
             short,
-            long = "Manually set the export folder, default is ./export",
-            value_name = "export"
+            long,
+            value_name = "EXPORT_PATH",
+            help = "Set the export folder for scoring reports (default: ./export)",
+            long_help = "Specify a custom path to export the scoring reports. This overrides the auto_export_path in the config file."
         )]
         export: Option<String>,
 
-        // Config folder - Optional
         #[arg(
             short,
-            long = "Manually set the config folder, default is ./config",
-            value_name = "config"
+            long,
+            value_name = "CONFIG_PATH",
+            help = "Set the configuration folder (default: ./config)",
+            long_help = "Specify the path to the folder containing config.json and checks.json files. This allows for multiple configuration setups."
         )]
         config: Option<String>,
     },
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli: Cli = Cli::parse();
 
-    match &cli.subcommand.unwrap() {
-        SubCommands::Run { export, config } => run(export, config),
+    match cli.subcommand {
+        Some(SubCommands::Run { export, config }) => run(&export, &config).await?,
+        None => {
+            eprintln!("Invalid CLI usage. Please use help command to view a list of commands!");
+            std::process::exit(1);
+        }
     }
-    .await
+
+    Ok(())
 }
 
-async fn run(export: &Option<String>, config: &Option<String>) {
-    let config_path: String = config.clone().unwrap_or(String::from("./config"));
+async fn run(export: &Option<String>, config: &Option<String>) -> Result<(), Box<dyn Error>> {
+    let config_path: String = config.clone().unwrap_or_else(|| String::from("./config"));
 
-    let (checks, hidden_penalties) = checks_config::get_checks();
-    let config: config::Config = config::Config::get(config_path);
+    let (checks, hidden_penalties) = checks_config::get_checks()?;
+    let config: config::Config = config::Config::get(&config_path)?;
 
     let mut engine: Engine = Engine::new(
         checks.clone(),
@@ -69,16 +76,15 @@ async fn run(export: &Option<String>, config: &Option<String>) {
             config.clone()
         },
     );
+
     let mut interval: tokio::time::Interval = tokio::time::interval(
         tokio::time::Duration::from_secs(config.engine_interval as u64),
     );
 
     loop {
         interval.tick().await;
-        looop(&mut engine);
+        if let Err(e) = engine.run_engine() {
+            eprintln!("Error running engine: {}", e);
+        }
     }
-}
-
-fn looop(engine: &mut Engine) {
-    engine.run_engine();
 }
