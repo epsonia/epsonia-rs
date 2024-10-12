@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read};
+use std::error::Error;
 
 use serde::{Deserialize, Serialize};
 
@@ -19,10 +19,10 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn get(conf: String) -> Self {
-        let mut file = File::open(format!("{}/config.json", conf)).unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        serde_json::from_str(&contents).unwrap()
+    pub fn get(conf: &str) -> Result<Self, Box<dyn Error>> {
+        let file_path = format!("{}/config.json", conf);
+        let contents = std::fs::read_to_string(file_path)?;
+        let config: Config = serde_json::from_str(&contents)?;
+        Ok(config)
     }
 }

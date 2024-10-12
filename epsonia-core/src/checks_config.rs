@@ -3,6 +3,7 @@ use epsonia_checks::{
     hidden_check::{HiddenPenalty, HiddenPenaltyKind},
 };
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 use crate::models::{
     BinaryExists, FileContainsContent, FileExists, FileLineContains, ServiceUp, UserConfig,
@@ -35,9 +36,15 @@ pub struct ChecksConfig {
     pub hidden_penalties: Option<HiddenPenaltiesConfig>,
 }
 
-pub fn parse_checks_config() -> ChecksConfig {
-    let config = std::fs::read_to_string("./config/checks.json").unwrap();
-    serde_json::from_str(&config).unwrap()
+pub fn parse_checks_config() -> Result<ChecksConfig, Box<dyn Error>> {
+    // TODO: Change path to use config param
+    let config = std::fs::read_to_string("./config/checks.json")
+        .map_err(|e| format!("Failed to read checks.json: {}", e))?;
+
+    let parsed_config: ChecksConfig =
+        serde_json::from_str(&config).map_err(|e| format!("Failed to parse checks.json: {}", e))?;
+
+    Ok(parsed_config)
 }
 
 // Run before engine
@@ -51,8 +58,8 @@ pub fn get_max_points(checks: &Vec<Check>) -> i32 {
     max_points
 }
 
-pub fn get_checks() -> (Vec<Check>, Vec<HiddenPenalty>) {
-    let checks_config = parse_checks_config();
+pub fn get_checks() -> Result<(Vec<Check>, Vec<HiddenPenalty>), Box<dyn Error>> {
+    let checks_config = parse_checks_config()?;
 
     let mut checks: Vec<Check> = Vec::new();
 
@@ -198,5 +205,5 @@ pub fn get_checks() -> (Vec<Check>, Vec<HiddenPenalty>) {
         }
     }
 
-    (checks, hidden_penalties)
+    Ok((checks, hidden_penalties))
 }
